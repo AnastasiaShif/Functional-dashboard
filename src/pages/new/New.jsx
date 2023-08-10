@@ -2,11 +2,80 @@ import "./new.scss";
 import Sidebar from "../../components/sidebar/Sidebar";
 import Navbar from "../../components/navbar/Navbar";
 import { DriveFolderUploadOutlined } from "@mui/icons-material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { serverTimestamp, doc, setDoc} from "firebase/firestore"; 
+import { auth, db, storage } from "../../firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 
 const New = ({inputs,title}) => {
 const [file,setFile]=useState("");
 
+const [data,setData]=useState({});
+
+useEffect(()=>{
+ 
+const uploadFile=()=>{
+  const name=new Date().getTime()+file.name;
+  const storageRef = ref(storage, name);
+  const uploadTask = uploadBytesResumable(storageRef, file);
+
+  uploadTask.on('state_changed', 
+    (snapshot) => {
+      
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      console.log('Upload is ' + progress + '% done');
+      switch (snapshot.state) {
+        case 'paused':
+          console.log('Upload is paused');
+          break;
+        case 'running':
+          console.log('Upload is running');
+          break;
+          default:
+             break
+      }
+    }, 
+    (error) => {
+    console.log(error)
+    }, 
+    () => {
+      getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+      setData((prev)=>  ({...prev,img:downloadURL}))
+      });
+    }
+  );
+}
+file && uploadFile()
+
+},[file])
+
+const handleAdd = async(e)=>{
+e.preventDefault()
+try {
+  const res= await createUserWithEmailAndPassword (
+    auth, 
+    data.email, 
+    data.password
+    );
+    console.log(res.user)
+   await setDoc(doc (db,"users", res.user.uid), {
+  ...data,
+  timeStamp:serverTimestamp()
+});
+}
+catch (err) {
+  console.log(err)
+}}
+
+const handleInput=(e)=>{
+  const id=e.target.id;
+  const value=e.target.value;
+
+  setData({...data, [id]: value})  
+}
+
+console.log(data)
 
   return (
     <div className="new">
@@ -21,7 +90,7 @@ const [file,setFile]=useState("");
           <img src={file ? URL.createObjectURL(file) : "https://icon-library.com/images/no-image-icon/no-image-icon-0.jpg"} alt="" />
         </div>
         <div className="right">
-          <form>
+          <form onSubmit={handleAdd}>
           <div className="formInput">
               <label htmlFor="file">
                 Image: <DriveFolderUploadOutlined className="icon"/>
@@ -35,14 +104,14 @@ const [file,setFile]=useState("");
             {inputs.map(input=>(
              <div className="formInput" key={input.id}>
              <label>{input.label}</label>
-             <input type={input.type} placeholder={input.placeholder}/>
+             <input
+             id={input.id} 
+             type={input.type} 
+             placeholder={input.placeholder}
+             onChange={handleInput}/>
            </div>
             ))}
-
-
-
-            
-            <button>
+            <button type="submit">
               Send
             </button>
           </form>
