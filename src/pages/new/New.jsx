@@ -7,11 +7,13 @@ import { serverTimestamp, doc, setDoc} from "firebase/firestore";
 import { auth, db, storage } from "../../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { useNavigate } from "react-router-dom";
 
 const New = ({inputs,title}) => {
 const [file,setFile]=useState("");
-
 const [data,setData]=useState({});
+const [per,setPer]=useState(null);
+const navigate=useNavigate();
 
 useEffect(()=>{
  
@@ -19,12 +21,14 @@ const uploadFile=()=>{
   const name=new Date().getTime()+file.name;
   const storageRef = ref(storage, name);
   const uploadTask = uploadBytesResumable(storageRef, file);
+  
 
   uploadTask.on('state_changed', 
     (snapshot) => {
       
       const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
       console.log('Upload is ' + progress + '% done');
+      setPer(progress)
       switch (snapshot.state) {
         case 'paused':
           console.log('Upload is paused');
@@ -63,6 +67,7 @@ try {
   ...data,
   timeStamp:serverTimestamp()
 });
+navigate(-1);
 }
 catch (err) {
   console.log(err)
@@ -75,7 +80,7 @@ const handleInput=(e)=>{
   setData({...data, [id]: value})  
 }
 
-console.log(data)
+// console.log(data)
 
   return (
     <div className="new">
@@ -111,7 +116,7 @@ console.log(data)
              onChange={handleInput}/>
            </div>
             ))}
-            <button type="submit">
+            <button disabled={per !==null && per < 100} type="submit">
               Send
             </button>
           </form>
