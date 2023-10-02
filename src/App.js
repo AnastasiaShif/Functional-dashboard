@@ -38,7 +38,7 @@ function App() {
                 index
                 element={
                   <RequireAuth>
-                    <List />
+                    <List type="users" />
                   </RequireAuth>
                 }
               />
@@ -64,7 +64,7 @@ function App() {
                 index
                 element={
                   <RequireAuth>
-                    <List />
+                    <List type="products" />
                   </RequireAuth>
                 }
               />
@@ -103,7 +103,7 @@ function App() {
               }
             />
             <Route
-              path="singe"
+              path="single"
               element={
                 <RequireAuth>
                   <Single />
