@@ -5,7 +5,7 @@ import { dataColumns } from "../../datatablesource";
 import { Link } from "react-router-dom";
 import {
   collection,
-  getDocs,
+  // getDocs,
   deleteDoc,
   doc,
   onSnapshot,
@@ -50,7 +50,7 @@ const Datatable = (params) => {
     return () => {
       unsub();
     };
-  }, []);
+  });
 
   const handleDelete = async (id) => {
     try {
